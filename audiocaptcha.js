@@ -29,7 +29,7 @@ let status,information;
 
 function preload(){
 for (var d = 0; d<10; d++){
-    fileStr = "assets/"+d+".wav"
+    fileStr = "assets/digits/"+d+".wav"
     digitSounds[d] = loadSound(fileStr);
 }
 console.log(digitSounds);
