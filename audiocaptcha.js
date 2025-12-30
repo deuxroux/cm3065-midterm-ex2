@@ -2,7 +2,7 @@
 let digitSounds= [];
 let answer ; //captcha answer
 let userAnswer = "";
-let state = "inactive";
+let state = "awaiting_input";
 
 // let randomParams = {
 //     freq:1200,
@@ -37,7 +37,7 @@ console.log(digitSounds);
 }
 
 function setup(){
-    createCanvas(600,400);
+    createCanvas(600,350);
     background(180);
     answer = generate_challenge(length);
     init_effects();
@@ -45,6 +45,8 @@ function setup(){
 }
 
 function draw(){
+
+    draw_FFT(fft);
 
 }
 
@@ -89,20 +91,23 @@ function init_UI(){
     fft = new p5.FFT
     fft.setInput(finalGain);
 
-    input = createInput("[replace with response]");
+    input = createInput("replace with response");
     input.size(200);
-    input.position(50, 170);
+    input.position(50, 200);
     play = createButton('PLAY');
     play.position(50, 50);
     play.mousePressed(playCaptcha);
     submit=createButton('SUBMIT');
-    submit.position(350,170)
+    submit.position(350,200)
+    submit.mousePressed(check_answer);
     generate = createButton('REFRESH')
     generate.position(350,50);
-    generate.mousePressed(generate_challenge(length));
+    generate.mousePressed(() => {
+        answer =generate_challenge(length);
+      });
     status = createP("Status: ")
-    status.position(200, 200);
-    information= createP("Please play captcha and type in the digits that you hear. Do not include commas or spaces.")
+    status.position(50, 230);
+    information= createP("Please play captcha and type in the digits that you hear, separating each by a comma.")
     information.position(10,0);
     
 
@@ -110,12 +115,12 @@ function init_UI(){
 }
 
 function randomize_audio(){
-    noise.amp(random(0.01, 0.05));
-    dist.set(random(0.001,0.01));
+    noise.amp(random(0.01, 0.1));
+    dist.set(random(0.01,0.05));
     comp.set(0.01,12,6,0.15) //determined to preserve inteligibility -- might not need. 
     rev.set(random(1.2, 3.0), random(1.5, 4.5));
     //del.process(finalGain, random(0.01, 0.01), random(0.1, 0.11), 5000); //params for delay
-    finalGain.amp(16);
+    finalGain.amp(1.5);
     noise.start();
 }
 
@@ -146,6 +151,50 @@ function playCaptcha(){
     // stop noise after the last token
     setTimeout(() => {
       noise.amp(0, 0.05);
-      state = "awaiting_input";
+      state = "awaiting_verification";
     }, (t + 0.2) * 1000);
 }
+
+function check_answer(){
+    userAnswer= input.value()
+    console.log(userAnswer);
+    console.log(answer.toString());
+    if (userAnswer=="replace with response"){
+        state = "awaiting_verification";
+        status.html("Status: No input given. type each digit you hear above with comma between. ");
+
+
+    }else if(userAnswer==answer.toString()){
+        state = "success";
+        status.html("Status: SUCCESS! Redirecting now... ");
+
+    }else{
+        state = "awaiting_verification";
+        status.html("INCORRECT. PLEASE TRY AGAIN OR REFRESH TO HEAR ANOTHER.");
+    }
+}
+
+function draw_FFT(fft, startX=100, startY=90, fftHeight = 100, fftWidth = 400){
+    push();
+    noStroke();
+    fill(0);                
+    rect(startX, startY, fftWidth, fftHeight);
+    pop();
+  
+    // draw spectrum in draw loop
+    let spectrum = fft.analyze();
+    let barWidth = fftWidth / spectrum.length;
+  
+    push();
+    noStroke();
+    fill(255, 0, 0);
+    translate(startX, startY);
+  
+    for (let i = 0; i < spectrum.length; i++){
+      let x = i * barWidth;
+      let h = map(spectrum[i], 0, 255, 0, fftHeight);
+      rect(x, fftHeight, barWidth, -h); // negative draws upward
+    }
+  
+    pop();
+    }
