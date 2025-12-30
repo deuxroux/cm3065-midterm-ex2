@@ -4,13 +4,6 @@ let answer ; //captcha answer
 let userAnswer = "";
 let state = "awaiting_input";
 
-// let randomParams = {
-//     freq:1200,
-//     freqSpan: 1000,
-//     q:8,
-//     trem:6
-// }
-
 //default challenge length: 4
 let length = 4; 
 
